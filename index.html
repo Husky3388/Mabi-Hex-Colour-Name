@@ -29,12 +29,15 @@
                 <div class="col-auto">
                     <button type="submit" class="btn btn-primary" onclick="findNames()">Submit</button>
                 </div>
+                <div id="spinner" class="spinner-border text-primary" role="status" style="display: none;">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
             </div>
             <br/>
-            <div class="progress">
-                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
+            <!-- <div class="progress">
+                <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
                     aria-valuemin="0" aria-valuemax="100"></div>
-            </div>
+            </div> -->
 
             <hr/>
 
@@ -48,21 +51,23 @@
         <script>
             var names = [];
             var maxChar = 0;
+            var maxProgress = 0;
+            var currentProgress = 0;
 
             function itoh(i) {
-                return i.toString(16);
+                return i.toString(16).toUpperCase();
             }
 
             function colCalc(i) {
-                return (parseInt(i) * 101) % 97 + 159;
+                return (i * 101) % 97 + 159;
             }
 
             function checkHexCode(name) {
                 var hex = $('#hex').val();
-                var ccolor = [];
-                var hcolor = [];
+                var ccolor = new Array(0, 0, 0);
+                var hcolor = new Array(0, 0, 0);
                 for (i = 0; i < name.length; i++) {
-                    ccolor[i % 3] = name[i];
+                    ccolor[i % 3] += name.charCodeAt(i);
                 }
                 ccolor[0] = colCalc(ccolor[0]);
                 ccolor[1] = colCalc(ccolor[1]);
@@ -76,20 +81,27 @@
             }
 
             function findNames() {
-                names = [];
-                var name = [];
-                maxChar = $('#maxChar').val();
-                for (i = 0; i <= maxChar-2; i++) {
-                    name.push(97);
-                }
-                name.push(65);
-                generateNames(name);
-                var nameResults = $('#results');
-                nameResults.empty();
-                for(i = 0; i < names.length; i++) {
-                    $('<div>', {class: 'col border border-primary'}).append(names[i]).appendTo(nameResults);
-                }
-                console.log("Done!");
+                $('#spinner').show(function() {
+                    names = [];
+                    var name = [];
+                    maxChar = $('#maxChar').val();
+                    for (i = 0; i <= maxChar-2; i++) {
+                        name.push(97);
+                    }
+                    name.push(65);
+                    // maxProgress = 0;
+                    // currentProgress = 0;
+                    // var tempName = [...name];
+                    // findMaxIterations(tempName);
+                    generateNames(name);
+                    var nameResults = $('#results');
+                    nameResults.empty();
+                    for(i = 0; i < names.length; i++) {
+                        $('<div>', {class: 'col border border-primary'}).append(names[i]).appendTo(nameResults);
+                    }
+                    console.log("Done!");
+                    $('#spinner').hide();
+                });
             }
 
             function generateNames(name) {
@@ -107,9 +119,11 @@
                                 }
                             }
                         }
-                        if (checkHexCode(name)) {
+                        if (checkHexCode(print(name))) {
                             names.push(print(name));
                         }
+                        // currentProgress++;
+                        // updateProgressBar();
                     }
                 }
             }
@@ -121,6 +135,36 @@
                     output[index++] = String.fromCharCode(name[i]);
                 }
                 return output.join('');
+            }
+
+            function findMaxIterations(name) {
+                for (i = 0; i < maxChar-1; i++) {
+                    while (name[maxChar-1] <= 122) {
+                        name[0]++;
+                        for (i = 0; i < maxChar-1; i++) {
+                            if (name[i] > 122) {
+                                name[i] = 97;
+                                name[i + 1]++;
+                                if (name[maxChar-1] > 90 && name[maxChar-1] < 97) {
+                                    name[maxChar-1] = 97;
+                                } else if (name[maxChar-1] > 122) {
+                                    return;
+                                }
+                            }
+                        }
+                        maxProgress++;
+                        // console.log(maxProgress);
+                    }
+                }
+            }
+
+            function updateProgressBar() {
+                var percentage = (currentProgress / maxProgress) * 100;
+                if (percentage > 100) {
+                    percentage = 100;
+                }
+                $('#progressBar').css('width', percentage+'%');
+                $('#progressBar').html(percentage+'%');
             }
         </script>
     </body>
